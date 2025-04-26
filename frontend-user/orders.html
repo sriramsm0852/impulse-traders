@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Impulse Traders</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="home.html" class="navbar-brand">Impulse Traders</a>
+        <div class="navbar-nav">
+            <a href="home.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+                Home
+            </a>
+            <a href="cart.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2838/2838895.png" alt="Cart">
+                Cart
+            </a>
+            <a href="orders.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2435/2435281.png" alt="Orders">
+                Orders
+            </a>
+            <a href="profile.html" class="nav-link profile-icon">
+                <img src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg" alt="Profile">
+            </a>
+        </div>
+    </nav>
+
+    <div class="orders-container">
+        <h1>My Orders</h1>
+        <div id="orders-container">
+            <!-- Orders will be dynamically loaded here -->
+        </div>
+    </div>
+
+    <script>
+        async function loadOrders() {
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+            if (!loggedInUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/orders/user/${loggedInUser._id}`);
+                if (!response.ok) throw new Error('Failed to fetch orders');
+                
+                const orders = await response.json();
+                const container = document.getElementById('orders-container');
+
+                if (orders.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">No orders found.</p>';
+                    return;
+                }
+
+                container.innerHTML = orders.map(order => `
+                    <div class="order-card">
+                        <h3>Order ID: ${order._id}</h3>
+                        <div class="order-details">
+                            <p><strong>Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+                            <p><strong>Total Amount:</strong> ₹${order.totalAmount}</p>
+                            <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
+                            <p><strong>Status:</strong> ${order.status || 'Placed'}</p>
+                            <p><strong>Payment Status:</strong> ${order.paymentStatus}</p>
+                            <p><strong>Shipping Address:</strong><br>
+                                ${order.address.name}<br>
+                                ${order.address.addressLine}<br>
+                                ${order.address.pincode}
+                                ${order.address.landmark ? `<br>${order.address.landmark}` : ''}
+                            </p>
+                            <div class="order-items">
+                                <p><strong>Items:</strong></p>
+                                ${order.products.map(item => `
+                                    <div class="order-item">
+                                        <div style="display: flex; gap: 1rem; align-items: center;">
+                                            <img src="${item.product.image}" alt="${item.product.name}" 
+                                                 style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">
+                                            <div>
+                                                <strong>${item.product.name}</strong>
+                                                <p>Quantity: ${item.quantity}</p>
+                                                <p>Price: ₹${item.product.price * item.quantity}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                document.getElementById('orders-container').innerHTML = 
+                    '<p style="text-align: center; color: #ff4b4b;">Failed to load orders. Please try again later.</p>';
+            }
+        }
+
+        // Load orders when the page loads
+        window.onload = loadOrders;
+    </script>
+</body>
+</html>

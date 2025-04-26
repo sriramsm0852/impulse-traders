@@ -1,0 +1,105 @@
+<!-- frontend-user/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Impulse Traders and Crackers Shop</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: linear-gradient(135deg, #f9f9f9, #eaeaea); /* Subtle gradient background */
+    }
+    .auth-options {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      display: flex;
+      gap: 20px;
+    }
+    .auth-options a {
+      background: rgba(255, 255, 255, 0.9);
+      padding: 15px 30px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: #333;
+      font-size: 1.2rem;
+      font-weight: bold;
+      box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .auth-options a:hover {
+      transform: scale(1.1);
+      box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Impulse Traders</h1>
+  </header>
+  
+  <!-- Products section -->
+  <section id="productsSection">
+    <!-- Products will be dynamically loaded here -->
+  </section>
+  
+  <!-- Bottom navigation -->
+  <nav class="bottom-nav">
+    <a href="index.html" onclick="loadProducts(); return false;">
+      <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+      <span>Home</span>
+    </a>
+    <a href="cart.html">
+      <img src="https://cdn-icons-png.flaticon.com/512/2838/2838895.png" alt="Cart">
+      <span>Cart</span>
+    </a>
+    <a href="orders.html">
+      <img src="https://cdn-icons-png.flaticon.com/512/2435/2435281.png" alt="Orders">
+      <span>Orders</span>
+    </a>
+  </nav>
+  
+  <script src="main.js"></script>
+  <script>
+    async function loadProducts() {
+      try {
+        const res = await fetch('http://localhost:5000/api/products');
+        if (!res.ok) throw new Error('Failed to fetch products');
+        const products = await res.json();        node -v
+        const section = document.getElementById('productsSection');
+        section.innerHTML = ''; // Clear previous content
+        products.forEach((product, index) => {
+          const prodDiv = document.createElement('div');
+          prodDiv.className = 'product-card';
+          prodDiv.innerHTML = `
+            <img src="${product.image}" alt="${product.name}">
+            <h3>${product.name}</h3>
+            <p>${product.description}</p>
+            <p>Price: ₹${product.price}</p>
+            <div class="product-buttons">
+              <button onclick="addToFavourites('${product._id}')">❤️ Favourite</button>
+              <button onclick="addToCart('${product._id}')">Add to Cart</button>
+            </div>
+          `;
+          section.appendChild(prodDiv);
+        });
+      } catch (error) {
+        console.error('Error loading products:', error);
+        document.getElementById('productsSection').innerHTML = '<p>Failed to load products. Please try again later.</p>';
+      }
+    }
+
+    async function addToFavourites(productId) {
+      alert('The product is added to favourites');
+    }
+
+    async function addToCart(productId) {
+      alert('Product added to cart');
+    }
+
+    // Load products by default when the page loads
+    window.onload = loadProducts;
+  </script>
+</body>
+</html>

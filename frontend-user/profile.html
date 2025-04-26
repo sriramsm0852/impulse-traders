@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - Impulse Traders</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="home.html" class="navbar-brand">Impulse Traders</a>
+        <div class="navbar-nav">
+            <a href="home.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+                Home
+            </a>
+            <a href="cart.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2838/2838895.png" alt="Cart">
+                Cart
+            </a>
+            <a href="orders.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2435/2435281.png" alt="Orders">
+                Orders
+            </a>
+            <a href="profile.html" class="nav-link profile-icon">
+                <img src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg" alt="Profile">
+            </a>
+        </div>
+    </nav>
+
+    <div class="orders-container" style="max-width: 600px;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <div style="text-align: center; margin-bottom: 2rem;">
+                <img src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg" 
+                     alt="Profile Picture" 
+                     style="width: 120px; height: 120px; border-radius: 50%; margin-bottom: 1rem;">
+                <h1 id="userName" style="margin: 0;"></h1>
+                <p id="userPhone" style="color: #666; margin: 0.5rem 0;"></p>
+                <p id="userEmail" style="color: #666; margin: 0;"></p>
+            </div>
+
+            <div style="border-top: 1px solid #eee; padding-top: 2rem;">
+                <h2>Account Settings</h2>
+                <form id="profileForm">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #666;">Phone Number</label>
+                        <input type="tel" name="phone" disabled style="background: #f5f5f5;">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #666;">Email (Optional)</label>
+                        <input type="email" name="email">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #666;">Name</label>
+                        <input type="text" name="name">
+                    </div>
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; color: #666;">Change Password</label>
+                        <input type="password" name="newPassword" placeholder="Enter new password">
+                    </div>
+                    <div style="display: flex; gap: 1rem; flex-direction: column;">
+                        <button type="submit">Update Profile</button>
+                        <button type="button" onclick="logout()" style="background: #ff4b4b;">Logout</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function checkAuth() {
+            const user = JSON.parse(localStorage.getItem('loggedInUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            return user;
+        }
+
+        async function loadUserProfile() {
+            const user = await checkAuth();
+            if (!user) return;
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/auth/user/${user._id}`);
+                if (!response.ok) throw new Error('Failed to fetch user details');
+                const userData = await response.json();
+                
+                // Update profile display
+                document.getElementById('userName').textContent = userData.name || 'User';
+                document.getElementById('userPhone').textContent = `Phone: ${userData.phone}`;
+                document.getElementById('userEmail').textContent = `Email: ${userData.email || 'Not provided'}`;
+                
+                // Update form fields
+                const form = document.getElementById('profileForm');
+                form.phone.value = userData.phone || '';
+                form.email.value = userData.email || '';
+                form.name.value = userData.name || '';
+            } catch (error) {
+                console.error('Error loading user profile:', error);
+                alert('Failed to load user profile. Please try again.');
+            }
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const user = await checkAuth();
+            if (!user) return;
+            
+            const formData = {
+                name: e.target.name.value,
+                email: e.target.email.value
+            };
+
+            // Only include password if it's provided
+            if (e.target.newPassword.value.trim()) {
+                formData.password = e.target.newPassword.value.trim();
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5000/api/auth/user/${user._id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to update profile');
+                }
+
+                const updatedUser = await response.json();
+                // Update local storage with new user data while preserving the _id
+                localStorage.setItem('loggedInUser', JSON.stringify({
+                    ...user,
+                    ...updatedUser
+                }));
+                
+                alert('Profile updated successfully!');
+                loadUserProfile(); // Reload the profile to show updated data
+                e.target.newPassword.value = ''; // Clear password field
+            } catch (error) {
+                alert(error.message || 'Failed to update profile. Please try again.');
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('loggedInUser');
+            localStorage.removeItem('cart');
+            window.location.href = 'home.html';
+        }
+
+        // Load user profile when the page loads
+        window.onload = loadUserProfile;
+    </script>
+</body>
+</html>

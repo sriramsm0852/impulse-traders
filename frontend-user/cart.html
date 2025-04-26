@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart - Impulse Traders</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="home.html" class="navbar-brand">Impulse Traders</a>
+        <div class="navbar-nav">
+            <a href="home.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+                Home
+            </a>
+            <a href="cart.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2838/2838895.png" alt="Cart">
+                Cart
+            </a>
+            <a href="orders.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2435/2435281.png" alt="Orders">
+                Orders
+            </a>
+            <a href="profile.html" class="nav-link profile-icon">
+                <img src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg" alt="Profile">
+            </a>
+        </div>
+    </nav>
+
+    <div class="orders-container">
+        <h1>My Cart</h1>
+        <div id="cartSection">
+            <!-- Cart items will be dynamically loaded here -->
+        </div>
+        <div id="cartSummary" style="text-align: right; margin-top: 2rem;">
+            <h3>Cart Total: ₹<span id="cartTotal">0</span></h3>
+            <button class="checkout-button" onclick="checkout()">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <script>
+        function loadCart() {
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            const cartSection = document.getElementById('cartSection');
+            cartSection.innerHTML = ''; // Clear previous content
+            
+            if (cartItems.length === 0) {
+                cartSection.innerHTML = '<p style="text-align: center; margin-top: 2rem;">Your cart is empty.</p>';
+                document.getElementById('cartTotal').textContent = '0';
+                return;
+            }
+
+            let total = 0;
+            cartItems.forEach((item, index) => {
+                const quantity = item.quantity || 1;
+                const itemTotal = item.price * quantity;
+                total += itemTotal;
+
+                const cartDiv = document.createElement('div');
+                cartDiv.className = 'order-card';
+                cartDiv.innerHTML = `
+                    <div style="display: flex; gap: 1rem; align-items: center;">
+                        <img src="${item.image}" alt="${item.name}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                        <div style="flex-grow: 1;">
+                            <h3 style="margin: 0;">${item.name}</h3>
+                            <p style="margin: 0.5rem 0;">Price: ₹${item.price}</p>
+                            <div class="quantity-container">
+                                <button onclick="updateQuantity(${index}, -1)" style="padding: 5px 10px;">-</button>
+                                <span id="quantity-${index}" style="margin: 0 1rem;">${quantity}</span>
+                                <button onclick="updateQuantity(${index}, 1)" style="padding: 5px 10px;">+</button>
+                                <button onclick="removeItem(${index})" style="margin-left: 1rem; background: #ff4b4b;">Remove</button>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <p style="font-weight: bold;">₹${itemTotal}</p>
+                        </div>
+                    </div>
+                `;
+                cartSection.appendChild(cartDiv);
+            });
+
+            document.getElementById('cartTotal').textContent = total;
+        }
+
+        function updateQuantity(index, change) {
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cartItems[index]) {
+                cartItems[index].quantity = (cartItems[index].quantity || 1) + change;
+                if (cartItems[index].quantity < 1) {
+                    cartItems.splice(index, 1); // Remove item if quantity is less than 1
+                }
+                localStorage.setItem('cart', JSON.stringify(cartItems));
+                loadCart(); // Reload the cart to reflect changes
+            }
+        }
+
+        function removeItem(index) {
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            cartItems.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cartItems));
+            loadCart();
+        }
+
+        function checkout() {
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            if (cartItems.length > 0) {
+                window.location.href = 'payment.html';
+            } else {
+                alert('Your cart is empty.');
+            }
+        }
+
+        // Load cart items when the page loads
+        window.onload = loadCart;
+    </script>
+</body>
+</html>

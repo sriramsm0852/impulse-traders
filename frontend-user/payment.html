@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment - Impulse Traders</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="home.html" class="navbar-brand">Impulse Traders</a>
+        <div class="navbar-nav">
+            <a href="home.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+                Home
+            </a>
+            <a href="cart.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2838/2838895.png" alt="Cart">
+                Cart
+            </a>
+            <a href="orders.html" class="nav-link">
+                <img src="https://cdn-icons-png.flaticon.com/512/2435/2435281.png" alt="Orders">
+                Orders
+            </a>
+            <a href="profile.html" class="nav-link profile-icon">
+                <img src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg" alt="Profile">
+            </a>
+        </div>
+    </nav>
+
+    <div class="orders-container">
+        <div class="payment-container" style="background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <h1>Complete Your Order</h1>
+            
+            <div id="orderSummary" style="margin-bottom: 2rem; padding: 1rem; background: #f8f8f8; border-radius: 8px;">
+                <!-- Order summary will be loaded here -->
+            </div>
+
+            <form id="paymentForm">
+                <h3>Payment Options</h3>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: block; margin-bottom: 0.5rem;">
+                        <input type="radio" name="paymentMethod" value="COD" required> Cash on Delivery (COD)
+                    </label>
+                    <label style="display: block; margin-bottom: 0.5rem;">
+                        <input type="radio" name="paymentMethod" value="UPI"> UPI
+                    </label>
+                    <label style="display: block;">
+                        <input type="radio" name="paymentMethod" value="Card"> Credit/Debit Card
+                    </label>
+                </div>
+
+                <h3>Address Details</h3>
+                <input type="text" name="name" placeholder="Full Name" required>
+                <input type="tel" name="phone" placeholder="Phone Number" required>
+                <textarea name="address" placeholder="Delivery Address" rows="3" required></textarea>
+                <input type="text" name="pincode" placeholder="Pincode" required>
+                <input type="text" name="landmark" placeholder="Landmark (Optional)">
+                
+                <button type="submit" style="width: 100%; margin-top: 1rem;">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function loadOrderSummary() {
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            const summaryDiv = document.getElementById('orderSummary');
+            
+            if (cartItems.length === 0) {
+                window.location.href = 'cart.html';
+                return;
+            }
+
+            let total = 0;
+            const itemsHtml = cartItems.map(item => {
+                const quantity = item.quantity || 1;
+                const itemTotal = item.price * quantity;
+                total += itemTotal;
+                return `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>${item.name} x ${quantity}</span>
+                        <span>₹${itemTotal}</span>
+                    </div>
+                `;
+            }).join('');
+
+            summaryDiv.innerHTML = `
+                <h3 style="margin-top: 0;">Order Summary</h3>
+                ${itemsHtml}
+                <div style="border-top: 1px solid #ddd; margin-top: 1rem; padding-top: 1rem;">
+                    <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                        <span>Total Amount:</span>
+                        <span>₹${total}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('paymentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const cartItems = JSON.parse(localStorage.getItem('cart')) || [];
+            const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+
+            if (!loggedInUser) {
+                alert('Please log in to place an order.');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const formData = {
+                userId: loggedInUser._id, // Changed from id to _id
+                products: cartItems.map(item => ({
+                    product: item.productId,
+                    quantity: item.quantity || 1
+                })),
+                totalAmount: cartItems.reduce((sum, item) => sum + item.price * (item.quantity || 1), 0),
+                paymentMethod: e.target.paymentMethod.value,
+                address: {
+                    name: e.target.name.value,
+                    phone: e.target.phone.value,
+                    addressLine: e.target.address.value,
+                    pincode: e.target.pincode.value,
+                    landmark: e.target.landmark.value
+                }
+            };
+
+            try {
+                const response = await fetch('http://localhost:5000/api/orders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                if (!response.ok) throw new Error('Failed to place order');
+
+                const data = await response.json();
+                alert('Order placed successfully!');
+                localStorage.removeItem('cart'); // Clear the cart
+                window.location.href = 'orders.html'; // Redirect to orders page
+            } catch (error) {
+                console.error('Error placing order:', error);
+                alert('Failed to place order. Please try again.');
+            }
+        });
+
+        // Load order summary when the page loads
+        window.onload = loadOrderSummary;
+    </script>
+</body>
+</html>

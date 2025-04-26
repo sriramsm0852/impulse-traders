@@ -1,0 +1,65 @@
+<!-- frontend-admin/admin.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard - Impulse Traders</title>
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <nav class="admin-navbar">
+        <div class="nav-brand">Impulse Traders Admin</div>
+        <button onclick="logout()" class="logout-btn">Logout</button>
+    </nav>
+
+    <div class="admin-container">
+        <div class="sidebar">
+            <button class="tab-btn active" onclick="showTab('products')">Products</button>
+            <button class="tab-btn" onclick="showTab('orders')">Orders</button>
+            <button class="tab-btn" onclick="showTab('users')">Users</button>
+        </div>
+
+        <div class="main-content">
+            <div id="products" class="tab-content active">
+                <div class="header-actions">
+                    <h2>Manage Products</h2>
+                    <button onclick="showAddProductForm()">Add Product</button>
+                </div>
+                <div id="productsList"></div>
+            </div>
+
+            <div id="orders" class="tab-content">
+                <div class="header-actions">
+                    <h2>Manage Orders</h2>
+                </div>
+                <div id="ordersList"></div>
+            </div>
+
+            <div id="users" class="tab-content">
+                <div class="header-actions">
+                    <h2>Manage Users</h2>
+                </div>
+                <div id="usersList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="addProductModal" class="modal">
+        <div class="modal-content">
+            <h2>Add New Product</h2>
+            <form id="addProductForm">
+                <input type="text" name="name" placeholder="Product Name" required>
+                <input type="number" name="price" placeholder="Price" required>
+                <textarea name="description" placeholder="Description" required></textarea>
+                <input type="text" name="image" placeholder="Image URL" required>
+                <div class="modal-actions">
+                    <button type="button" onclick="closeModal('addProductModal')" class="cancel-btn">Cancel</button>
+                    <button type="submit">Add Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="admin.js"></script>
+</body>
+</html>
